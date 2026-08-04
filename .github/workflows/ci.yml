@@ -1,0 +1,41 @@
+name: InfrastructureManager CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build and start containers
+        run: docker compose up -d --build
+
+      - name: Wait for services
+        run: sleep 10
+
+      - name: Test API health
+        run: curl --fail http://localhost:8000/health
+
+      - name: Test servers API
+        run: curl --fail http://localhost:8000/servers
+
+      - name: Show container status
+        if: always()
+        run: docker compose ps
+
+      - name: Show logs
+        if: always()
+        run: docker compose logs
+
+      - name: Stop containers
+        if: always()
+        run: docker compose down -v
