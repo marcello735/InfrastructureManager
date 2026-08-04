@@ -4,6 +4,8 @@ services:
     container_name: infrastructure-api
     ports:
       - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://admin:password@infrastructure-db:5432/infrastructure
     restart: always
     depends_on:
       - db
