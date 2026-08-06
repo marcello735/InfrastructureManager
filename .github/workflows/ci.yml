@@ -1,4 +1,4 @@
-name: InfrastructureManager CI
+name: InfrastructureManager CI/CD
 
 on:
   push:
@@ -28,6 +28,13 @@ jobs:
       - name: Test servers API
         run: curl --fail http://localhost:8000/servers
 
+      - name: Run pytest
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest httpx2
+          pytest
+
       - name: Show container status
         if: always()
         run: docker compose ps
@@ -39,3 +46,23 @@ jobs:
       - name: Stop containers
         if: always()
         run: docker compose down -v
+
+  docker:
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build Docker image
+        run: docker build -t marcello448/infrastructure-manager:latest .
+
+      - name: Push Docker image
+        run: docker push marcello448/infrastructure-manager:latest
